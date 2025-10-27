@@ -1,0 +1,192 @@
+.sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-right: 1px solid #e0e0e0;
+  height: 100%;
+  position: sticky;
+  top: 0;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.sidebar-title {
+  font-weight: 700 !important;
+  color: #1a237e !important;
+  margin-bottom: 8px !important;
+}
+
+.sidebar-subtitle {
+  color: #666 !important;
+  font-size: 0.875rem !important;
+}
+
+.sidebar-user {
+  color: #333 !important;
+  font-weight: 500 !important;
+}
+
+.sidebar-section {
+  margin-bottom: 24px;
+}
+
+.sidebar-section-title {
+  font-weight: 600 !important;
+  color: #333 !important;
+  margin-bottom: 12px !important;
+  font-size: 1.1rem !important;
+}
+
+.sidebar-list {
+  padding: 0 !important;
+}
+
+.sidebar-list-item {
+  border-radius: 8px !important;
+  margin-bottom: 4px !important;
+  padding: 8px 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.sidebar-list-item:hover {
+  background-color: #f0f0f0 !important;
+  transform: translateX(4px);
+}
+
+.sidebar-list-item .MuiListItemText-primary {
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+}
+
+.sidebar-menu-section {
+  margin: 16px 0;
+}
+
+.sidebar-menu-title {
+  font-weight: 600 !important;
+  color: #1976d2 !important;
+  margin-bottom: 8px !important;
+  font-size: 1rem !important;
+}
+
+.sidebar-menu-item {
+  margin: 4px 0 !important;
+  padding: 6px 0 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar-menu-item:hover {
+  background-color: #e3f2fd !important;
+  padding-left: 8px !important;
+}
+
+.sidebar-menu-item .MuiTypography-body2 {
+  font-weight: 500 !important;
+}
+
+.sidebar-menu-item .MuiTypography-caption {
+  color: #666 !important;
+  font-size: 0.75rem !important;
+}
+
+.sidebar-divider {
+  margin: 20px 0 !important;
+  background-color: #e0e0e0 !important;
+}
+
+/* Active state for menu items */
+.sidebar-list-item.active {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid #1976d2;
+  padding-left: 9px !important;
+}
+
+.sidebar-list-item.active .MuiListItemText-primary {
+  color: #1976d2 !important;
+  font-weight: 600 !important;
+}
+
+/* Microservices status indicator */
+.microservices-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  margin-right: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100% !important;
+    margin-bottom: 16px;
+  }
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Meeting room status */
+.room-status {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.room-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.room-available .room-status-dot {
+  background-color: #4caf50;
+}
+
+.room-occupied .room-status-dot {
+  background-color: #f44336;
+}
+
+.room-maintenance .room-status-dot {
+  background-color: #ff9800;
+}

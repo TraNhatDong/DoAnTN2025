@@ -1,0 +1,197 @@
+.meeting-list-container {
+  padding: 24px;
+}
+
+.meeting-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .meeting-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .meeting-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (min-width: 1200px) {
+  .meeting-grid {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+.meeting-card {
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.meeting-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.meeting-header {
+  position: relative;
+  background: linear-gradient(135deg, #85889a 0%, #635f51 100%);
+  color: white;
+  padding: 16px;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+ 
+}
+
+.meeting-title {
+  font-weight: 900; /* Tăng độ đậm từ 700 lên 900 */
+  font-size: 14px; /* Đổi từ 0.95rem sang 14px */
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.meeting-class-code {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; 
+}
+
+.meeting-status-chip {
+  position: absolute;
+  top: 50px;
+  right: 12px;
+  font-weight: 600;
+  font-size: 0.65rem;
+  height: 20px;
+}
+
+.meeting-avatar {
+  background-color: rgba(255, 255, 255, 0.25);
+  position: absolute;
+  right: -250px;
+  bottom: -20px;
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 3px solid white;
+  backdrop-filter: blur(8px);
+}
+
+.meeting-content {
+  padding: 16px;
+  padding-top: 28px;
+}
+
+.meeting-teacher {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.meeting-teacher strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.meeting-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meeting-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meeting-detail-item .MuiSvgIcon-root {
+  font-size: 18px;
+  color: #666;
+}
+
+.meeting-detail-text {
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.3;
+}
+
+.meeting-room {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.meeting-actions {
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #fafafa;
+}
+
+.meeting-action-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.meeting-action-buttons .MuiIconButton-root {
+  padding: 6px;
+  color: #666;
+}
+
+.meeting-action-buttons .MuiIconButton-root:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #333;
+}
+
+.empty-state-card {
+  text-align: center;
+  padding: 48px 32px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.empty-state-description {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
