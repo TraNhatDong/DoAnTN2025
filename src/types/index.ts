@@ -1,14 +1,32 @@
-export interface User {
-  id: string;
+
+export interface MeetingParticipant {
+  id: number;
+  userId: number;
+  role: 'CT' | 'TK' | 'TV'; // Chủ trì, Thư ký, Thành viên
+  status: string;           // Ví dụ: 'Approve', 'Pending', 'Reject'
+}
+
+export interface Meeting {
+  id: number;
   name: string;
+  description: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startTime: string;
+  endTime: string;
+  roomId: number;
+  cancelReason?: string | null;
+  participants: MeetingParticipant[];
+}
+export interface User {
+  userId: number;           // Long → number
   email: string;
-  role: 'secretary' | 'member' | 'chairperson';
-  avatar?: string;
-  department?: string;
-  position?: string;
-  phone?: string;
-  createdAt: string;
-  updatedAt: string;
+  firstName?: string;       // Có thể null → dùng optional
+  lastName?: string;
+  address?: string;
+  phoneNumber?: string;
+  birthday?: string;        // LocalDate → string (ISO format)
+  idCard?: string;
+  status: 'ACTIVE'|'INACTIVE';
 }
 
 export interface Room {
@@ -24,18 +42,15 @@ export interface Room {
 }
 
 export interface Transcript {
-  id: string;
-  meetingId: string;
+  transcript_id: string;
+  meeting_id: string;
   content: string;
-  rawText: string;
-  confidence: number;
-  status: 'processing' | 'completed' | 'failed';
-  language: string;
-  duration: number;
-  wordCount: number;
-  createdAt: string;
-  updatedAt: string;
+  status: "PROCESSING" | "COMPLETED";
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
+
 
 export interface ActionItem {
   id: string;
@@ -48,17 +63,22 @@ export interface ActionItem {
   createdAt: string;
   updatedAt: string;
 }
-
+ export interface Review {
+  review_id: string;
+  summary_id: string;
+  user_id: string;
+  status: "PENDING" | "CONFIRMED" | "REJECTED";
+  comment: string | null;
+  reviewed_at: string | null;
+}
 export interface Summary {
-  id: string;
-  meetingId: string;
+  summary_id: string;
+  meeting_id: string;
+status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL" | "APPROVAL" | "published"|"REVIEWED";
+
   content: string;
-  keyPoints: string[];
-  actionItems: ActionItem[];
-  status: 'processing' | 'completed' | 'failed';
-  summaryType: 'executive' | 'detailed' | 'action-oriented';
-  createdAt: string;
-  updatedAt: string;
+  created_by: string;
+  created_at: string;
 }
 
 export interface Approval {
@@ -88,24 +108,7 @@ export interface AudioRecording {
   updatedAt: string;
 }
 
-export interface Meeting {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  organizer: User;
-  participants: User[];
-  room: Room;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  agenda?: string[];
-  transcript?: Transcript;
-  summary?: Summary;
-  approvals: Approval[];
-  audioRecordings: AudioRecording[];
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export interface MeetingMinutes {
   id: string;

@@ -54,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: data.role,
       };
       setUser(newUser);
+      console.log("🔐 User logged in:", newUser);
     } catch (error) {
       console.warn("⚠️ API đăng nhập lỗi, dùng mock user thay thế.");
       // ✅ mock fallback

@@ -4,7 +4,7 @@ import { meetingService } from './meetingService';
 import { roomService } from './roomService';
 import { audioService } from './audioService';
 import { userService } from './userService';
-import { transcriptService, summaryService, approvalService, minutesService, notificationService } from './otherServices';
+import { transcriptService, summaryService, approvalService, minutesService, notificationService } from './summaryService';
 
 // Import mock services
 import { mockServices } from './mockApi';

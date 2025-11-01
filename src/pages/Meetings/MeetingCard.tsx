@@ -19,24 +19,31 @@ import {
   Delete
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import type { MeetingWithCTName } from './MeetingList'; // import interface mở rộng
 
-export interface Meeting {
-  id: string;
-  title: string;
-  classCode: string;
-  teacher: string;
-  time: string;
-  date: string;
-  participants: number;
-  status: "Đang diễn ra" | "Sắp diễn ra" | "Đã kết thúc";
-  room: string;
-}
+// Ngay đầu component MeetingCard
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 interface MeetingCardProps {
-  meeting: Meeting;
-  onEdit?: (meeting: Meeting) => void;
-  onDelete?: (meeting: Meeting) => void;
-  onJoin?: (meeting: Meeting) => void;
+  meeting:  MeetingWithCTName;
+  onEdit?: (meeting:  MeetingWithCTName) => void;
+  onDelete?: (meeting:  MeetingWithCTName) => void;
 }
 
 const MeetingCard: React.FC<MeetingCardProps> = ({ 
@@ -48,17 +55,20 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Đang diễn ra":
-        return { bgcolor: "#4caf50", color: "#fff" };
-      case "Sắp diễn ra":
-        return { bgcolor: "#ff9800", color: "#fff" };
-      case "Đã kết thúc":
-        return { bgcolor: "#9e9e9e", color: "#fff" };
-      default:
-        return { bgcolor: "default", color: "#000" };
-    }
-  };
+  switch (status) {
+    case "UPCOMING": // Sắp diễn ra
+      return { bgcolor: "#ff9800", color: "#fff" };
+    case "COMING": // Cũng là sắp diễn ra
+      return { bgcolor: "#ff9800", color: "#fff" };
+    case "COMPLETED": // Đã kết thúc
+      return { bgcolor: "#9e9e9e", color: "#fff" };
+    case "CANCELLED": // Đã hủy
+      return { bgcolor: "#f44336", color: "#fff" };
+    default:
+      return { bgcolor: "default", color: "#000" };
+  }
+};
+
 
   const getStatusVariant = (status: string) => {
     return status === "Đang diễn ra" ? "filled" : "outlined";
@@ -89,7 +99,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   };
 
 
-  const isActionDisabled = meeting.status === "Đã kết thúc";
+  const isActionDisabled = meeting.status === "COMPLETED";
 
   return (
     <Card
@@ -132,10 +142,10 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
               overflow: "hidden"
             }}
           >
-            {meeting.title}
+            {meeting.name}
           </Typography>
           <Typography sx={{ fontSize: "0.8rem", opacity: 0.9 }}>
-            {meeting.classCode}
+            {meeting.description}
           </Typography>
         </Box>
 
@@ -156,32 +166,37 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
       {/* Content */}
       <CardContent sx={{ pb: 1 }}>
         <Typography sx={{ mb: 2, fontSize: "0.9rem", color: "text.secondary" }}>
-          Người chủ trì: <strong style={{ color: "text.primary" }}>{meeting.teacher}</strong>
+          {/* Người chủ trì: <strong style={{ color: "text.primary" }}>{meeting.ctName}</strong> */}
         </Typography>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <CalendarMonth fontSize="small" color="action" />
-            <Typography variant="body2">{meeting.date}</Typography>
-          </Box>
+  <CalendarMonth fontSize="small" color="action" />
+  <Typography variant="body2">
+    {formatDate(meeting.startTime)}
+  </Typography>
+</Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <AccessTime fontSize="small" color="action" />
-            <Typography variant="body2">{meeting.time}</Typography>
-          </Box>
+<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+  <AccessTime fontSize="small" color="action" />
+  <Typography variant="body2">
+    {formatTime(meeting.startTime)} - {formatTime(meeting.endTime)}
+  </Typography>
+</Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+
+          {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Group fontSize="small" color="action" />
             <Typography variant="body2">
-              {meeting.participants} thành viên
+              {meeting.participants.length} thành viên
             </Typography>
-          </Box>
+          </Box> */}
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Box sx={{ width: 20, display: "flex", justifyContent: "center" }}>
               📍
             </Box>
-            <Typography variant="body2">{meeting.room}</Typography>
+            <Typography variant="body2">{meeting.roomId}</Typography>
           </Box>
         </Box>
       </CardContent>

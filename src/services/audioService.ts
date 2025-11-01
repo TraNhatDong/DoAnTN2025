@@ -2,11 +2,26 @@ import api from './api';
 import type { AudioRecording, Transcript, ApiResponse, AxiosProgressEvent } from '../types';
 
 export const audioService = {
-  uploadAudio: (meetingId: string, formData: FormData, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) => 
-    api.post<ApiResponse<{ jobId: string; status: string }>>(`/audio/upload/${meetingId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress,
-    }),
+  uploadAudio: (
+    meetingId: string,
+    createdBy: string,
+    file: File,
+    onUploadProgress?: (progressEvent: AxiosProgressEvent) => void
+  ) => {
+    const formData = new FormData();
+    formData.append("meeting_id", meetingId);
+    formData.append("created_by", createdBy);
+    formData.append("file", file);
+
+    return api.post(
+      `/audio/upload`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress,
+      }
+    );
+  },
   
   getTranscriptionStatus: (jobId: string) => 
     api.get<ApiResponse<{ status: string; transcript?: Transcript }>>(`/audio/status/${jobId}`),

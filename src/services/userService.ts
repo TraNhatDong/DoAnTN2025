@@ -5,8 +5,8 @@ export const userService = {
   getAllUsers: (params?: PaginationParams) => 
     api.get<ApiResponse<User[]>>('/users', { params }),
   
-  getUser: (id: string) => 
-    api.get<ApiResponse<User>>(`/users/${id}`),
+  getUser: (id: number) => 
+    api.get<User>(`/users/info/${id}`),
   
   updateUser: (id: string, userData: Partial<User>) => 
     api.put<ApiResponse<User>>(`/users/${id}`, userData),
@@ -14,6 +14,4 @@ export const userService = {
   deleteUser: (id: string) => 
     api.delete<ApiResponse<null>>(`/users/${id}`),
   
-  getUsersByRole: (role: User['role']) => 
-    api.get<ApiResponse<User[]>>(`/users/role/${role}`),
 };

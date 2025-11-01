@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -8,42 +8,31 @@ import type { DateClickArg } from "@fullcalendar/interaction";
 import { Box, Card, CardContent, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import MainLayout from "../../components/layout/MainLayout";
 import { useNavigate } from "react-router-dom";
+import type { Meeting } from "../../types";
+import { meetingService } from "../../services/meetingService";
 
 const MeetingCalendar: React.FC = () => {
   const navigate = useNavigate();
-
-  // --- Mock dữ liệu cuộc họp ---
-  const [meetings] = useState([
-    {
-      id: "1",
-      title: "Họp dự án Alpha",
-      start: "2025-10-24T09:00:00",
-      end: "2025-10-24T10:30:00",
-      location: "Phòng A1",
-      description: "Thảo luận tiến độ module quản lý người dùng",
-    },
-    {
-      id: "2",
-      title: "Sprint Review - Dự án Bravo",
-      start: "2025-10-26T14:00:00",
-      end: "2025-10-26T15:30:00",
-      location: "Zoom #321",
-      description: "Đánh giá kết quả Sprint 5 và kế hoạch tiếp theo",
-    },
-    {
-      id: "3",
-      title: "Họp nhóm kỹ thuật",
-      start: "2025-10-27T13:00:00",
-      end: "2025-10-27T14:00:00",
-      location: "Phòng họp B2",
-      description: "Phân tích lỗi hệ thống backend",
-    },
-  ]);
-
+ const [meetings, setMeetings] = useState<Meeting[]>([]);
+ useEffect(() => {
+     const fetchMeetings = async () => {
+       try {
+         const response = await meetingService.getAllMeetings();
+         const meetingsData: Meeting[] = response.data;
+ 
+         setMeetings(meetingsData);
+       } catch (error) {
+         console.error("Lỗi khi lấy danh sách cuộc họp:", error);
+       } 
+     };
+ 
+     fetchMeetings();
+   }, []);
+ 
   const [selectedMeeting, setSelectedMeeting] = useState<any | null>(null);
 
   const handleEventClick = (info: EventClickArg) => {
-    const meeting = meetings.find((m) => m.id === info.event.id);
+    const meeting = meetings.find((m) => String(m.id) === info.event.id);
     if (meeting) setSelectedMeeting(meeting);
   };
 
@@ -73,10 +62,10 @@ const MeetingCalendar: React.FC = () => {
             height="75vh"
             locale="vi"
             events={meetings.map((m) => ({
-              id: m.id,
-              title: m.title,
-              start: m.start,
-              end: m.end,
+              id: String(m.id),
+              title: m.name,
+              start: m.startTime,
+              end: m.endTime,
             }))}
             eventClick={handleEventClick}
             dateClick={(arg: DateClickArg) => console.log("Click date:", arg.dateStr)}
@@ -88,15 +77,15 @@ const MeetingCalendar: React.FC = () => {
       <Dialog open={!!selectedMeeting} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         {selectedMeeting && (
           <>
-            <DialogTitle>📋 {selectedMeeting.title}</DialogTitle>
+            <DialogTitle>📋 {selectedMeeting.name}</DialogTitle>
             <DialogContent dividers>
               <Typography variant="body1" sx={{ mb: 1 }}>
                 <strong>Thời gian:</strong>{" "}
-                {new Date(selectedMeeting.start).toLocaleString("vi-VN")} -{" "}
-                {new Date(selectedMeeting.end).toLocaleTimeString("vi-VN")}
+                {new Date(selectedMeeting.startTime).toLocaleTimeString("vi-VN")} -{" "}
+                {new Date(selectedMeeting.endTime).toLocaleString("vi-VN")}
               </Typography>
               <Typography variant="body1" sx={{ mb: 1 }}>
-                <strong>Địa điểm:</strong> {selectedMeeting.location}
+                <strong>Địa điểm:</strong> {selectedMeeting.roomId}
               </Typography>
               <Typography variant="body1">
                 <strong>Nội dung:</strong> {selectedMeeting.description}

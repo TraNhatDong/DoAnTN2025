@@ -1,15 +1,15 @@
 import api from './api';
-import type { Meeting, CreateMeetingRequest, UpdateMeetingRequest, ApiResponse, MeetingFilter, PaginationParams } from '../types';
+import type { MeetingParticipant,Meeting, CreateMeetingRequest, UpdateMeetingRequest, ApiResponse, MeetingFilter, PaginationParams } from '../types';
 
 export const meetingService = {
-  getAllMeetings: (filters?: MeetingFilter & PaginationParams) => 
-    api.get<ApiResponse<Meeting[]>>('/meetings', { params: filters }),
+  getAllMeetings: () => api.get<Meeting[]>('/meetings'),
+  getMeeting: (id: number) => api.get<Meeting>(`/meetings/${id}`),
+  getParticipant: (id: number) => api.get<MeetingParticipant[]>(`/meetings/${id}/participants`),
   
   getUserMeetings: (filters?: MeetingFilter & PaginationParams) => 
     api.get<ApiResponse<Meeting[]>>('/meetings/my-meetings', { params: filters }),
   
-  getMeeting: (id: string) => 
-    api.get<ApiResponse<Meeting>>(`/meetings/${id}`),
+
   
   createMeeting: (meetingData: CreateMeetingRequest) => 
     api.post<ApiResponse<Meeting>>('/meetings', meetingData),
@@ -20,8 +20,7 @@ export const meetingService = {
   deleteMeeting: (id: string) => 
     api.delete<ApiResponse<null>>(`/meetings/${id}`),
   
-  getCompletedMeetings: () => 
-    api.get<ApiResponse<Meeting[]>>('/meetings/completed'),
+
   
   addParticipant: (meetingId: string, userId: string) => 
     api.post<ApiResponse<Meeting>>(`/meetings/${meetingId}/participants`, { userId }),
