@@ -196,15 +196,6 @@ const MainLayout: React.FC<Props> = ({
           {/* Title / Breadcrumb */}
           {renderTitle()}
 
-          {/* Notifications */}
-          <Tooltip title="Thông báo">
-            <IconButton color="inherit" size="small" sx={{ mr: 2 }}>
-              <Badge badgeContent={0} color="error" max={9}>
-                <Notifications />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-
           {/* User Role Chip */}
           <Chip
             label={user?.role === "ADMIN" ? "Quản trị viên" : "Thành viên"}
@@ -232,7 +223,7 @@ const MainLayout: React.FC<Props> = ({
                   borderColor: "primary.light",
                 }}
               >
-                {user?.name?.charAt(0).toUpperCase()}
+                {user?.lastName?.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
           </Tooltip>
@@ -267,11 +258,11 @@ const MainLayout: React.FC<Props> = ({
                     fontSize: "1rem",
                   }}
                 >
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {user?.firstName?.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box>
                   <Typography variant="subtitle1" fontWeight="600" noWrap>
-                    {user?.name}
+                    {user?.firstName}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" noWrap>
                     {user?.email}
@@ -282,10 +273,16 @@ const MainLayout: React.FC<Props> = ({
 
             <Divider sx={{ my: 1 }} />
 
-            <MenuItem onClick={handleClose}>
-              <Person fontSize="small" sx={{ mr: 1.5, opacity: 0.7 }} />
-              Thông tin tài khoản
-            </MenuItem>
+            <MenuItem
+  onClick={() => {
+    handleClose();
+    navigate("/profile");
+  }}
+>
+  <Person fontSize="small" sx={{ mr: 1.5, opacity: 0.7 }} />
+  Thông tin tài khoản
+</MenuItem>
+
 
             <MenuItem onClick={handleLogout}>
               <Logout fontSize="small" sx={{ mr: 1.5, opacity: 0.7 }} />

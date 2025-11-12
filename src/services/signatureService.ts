@@ -8,7 +8,6 @@ import type {
   VerifyUploadResponse,
   ReleaseResponse,
   ErrorResponse,
-  ApiResponse
 } from '../types';
 
 export const signatureService = {
@@ -17,11 +16,11 @@ export const signatureService = {
     const response = await api.post<GenerateMinuteResponse | ErrorResponse>(
       `/api/sign/generate/${meetingId}`
     );
-    
+
     if ('error' in response.data) {
       throw new Error((response.data as ErrorResponse).error);
     }
-    
+
     return response.data as GenerateMinuteResponse;
   },
 
@@ -30,11 +29,11 @@ export const signatureService = {
     const response = await api.post<SignMinuteResponse | ErrorResponse>(
       `/api/sign/sign/${minuteId}`
     );
-    
+
     if ('error' in response.data) {
       throw new Error((response.data as ErrorResponse).error);
     }
-    
+
     return response.data as SignMinuteResponse;
   },
 
@@ -44,26 +43,18 @@ export const signatureService = {
     formData.append('meetingId', meetingId);
     formData.append('file', file);
 
-    const response = await api.post<Minute>(
-      '/api/sign/pdf',
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
-    );
-    
+    const response = await api.post<Minute>('/api/sign/pdf', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
     return response.data;
   },
 
   // ------------------- 4. Verify từ MinIO (path) -------------------
   verifyPaths: async (pdfPath: string, sigPath: string): Promise<VerifyResponse> => {
-    const response = await api.get<VerifyResponse>(
-      '/api/sign/verify',
-      {
-        params: { pdfPath, sigPath },
-      }
-    );
-    
+    const response = await api.get<VerifyResponse>('/api/sign/verify', {
+      params: { pdfPath, sigPath },
+    });
     return response.data;
   },
 
@@ -80,7 +71,7 @@ export const signatureService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       }
     );
-    
+
     return response.data;
   },
 
@@ -92,14 +83,11 @@ export const signatureService = {
 
   // ------------------- 7. Download file từ MinIO -------------------
   downloadFile: async (objectName: string): Promise<Blob> => {
-    const response = await api.get<Blob>(
-      '/api/sign/download',
-      {
-        params: { objectName },
-        responseType: 'blob',
-      }
-    );
-    
+    const response = await api.get('/api/sign/download', {
+      params: { objectName },
+      responseType: 'blob',
+    });
+
     return response.data;
   },
 
@@ -108,11 +96,21 @@ export const signatureService = {
     const response = await api.post<ReleaseResponse | ErrorResponse>(
       `/api/sign/release/${minuteId}`
     );
-    
+
     if ('error' in response.data) {
       throw new Error((response.data as ErrorResponse).error);
     }
-    
+
     return response.data as ReleaseResponse;
   },
+
+  // ------------------- 9. Lấy biên bản theo ID -------------------
+  getMinute: async (minuteId: string): Promise<Minute> => {
+    const response = await api.get<Minute>(`/api/sign/${minuteId}`);
+    return response.data;
+  },
+   getMinuteMeeting: async (meetingId: string): Promise<Minute> => {
+    const response = await api.get<Minute>(`/api/sign/meeting/${meetingId}`);
+    return response.data;
+  }
 };

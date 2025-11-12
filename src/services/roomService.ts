@@ -2,14 +2,14 @@ import api from './api';
 import type { Room, CreateRoomRequest, ApiResponse, RoomFilter, PaginationParams } from '../types';
 
 export const roomService = {
-  getAllRooms: (filters?: RoomFilter & PaginationParams) => 
-    api.get<ApiResponse<Room[]>>('/rooms', { params: filters }),
+  getAllRooms: () => 
+    api.get<Room[]>('/rooms/all'),
   
   getAvailableRooms: (startTime?: string, endTime?: string) => 
-    api.get<ApiResponse<Room[]>>('/rooms/available', { params: { startTime, endTime } }),
+    api.get<Room[]>('/rooms/available', { params: { startTime, endTime } }),
   
-  getRoom: (id: string) => 
-    api.get<ApiResponse<Room>>(`/rooms/${id}`),
+  getRoom: (id: Number) => 
+    api.get<Room>(`/rooms/${id}`),
   
   createRoom: (roomData: CreateRoomRequest) => 
     api.post<ApiResponse<Room>>('/rooms', roomData),

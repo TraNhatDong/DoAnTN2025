@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 interface Props {
@@ -9,9 +9,13 @@ interface Props {
 
 const ProtectedRoute: React.FC<Props> = ({ role, children }) => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
-  // 🔄 Khi đang đọc localStorage, đừng redirect
+  console.log("🛡️ ProtectedRoute - user:", user, "isLoading:", isLoading, "requiredRole:", role);
+
+  // Đang load user từ context/localStorage
   if (isLoading) {
+    console.log("⏳ ProtectedRoute: Đang loading...");
     return (
       <div
         style={{
@@ -28,9 +32,19 @@ const ProtectedRoute: React.FC<Props> = ({ role, children }) => {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== role) return <Navigate to="/" replace />;
+  // Chưa login → redirect về login và lưu đường dẫn hiện tại
+  if (!user) {
+    console.log("🔐 ProtectedRoute: Chưa login, redirect đến /login");
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
+  // Role không đúng → redirect về home
+  if (user.role !== role) {
+    console.log("🚫 ProtectedRoute: Role không đúng, redirect đến /");
+    return <Navigate to="/" replace />;
+  }
+
+  console.log("✅ ProtectedRoute: Cho phép truy cập");
   return <>{children}</>;
 };
 

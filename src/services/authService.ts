@@ -1,4 +1,3 @@
-// src/services/authService.ts
 import api from "./api";
 import type { ErrorResponse } from "../types";
 
@@ -18,50 +17,70 @@ export interface LoginResponse {
   email: string;
 }
 
+export interface User {
+  userId: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
+
 export const authService = {
-  // ------------------- 1. Đăng nhập -------------------
   login: async (payload: LoginRequest): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse | ErrorResponse>(
-      "/users/login",
-      payload
-    );
+    console.log("🔐 authService: Bắt đầu login", payload);
+    
+    try {
+      const response = await api.post<LoginResponse | ErrorResponse>(
+        "/users/login",
+        payload
+      );
 
-    if ("error" in response.data) {
-      throw new Error((response.data as ErrorResponse).error);
-    }
+      console.log("📡 authService: API response", response.data);
 
-    const data = response.data as LoginResponse;
+      if ("error" in response.data) {
+        console.log("❌ authService: API trả về lỗi", response.data.error);
+        throw new Error((response.data as ErrorResponse).error);
+      }
 
-    // Lưu token và thông tin user vào localStorage
-    localStorage.setItem("authToken", data.token);
-    localStorage.setItem(
-      "userData",
-      JSON.stringify({
+      const data = response.data as LoginResponse;
+      console.log("✅ authService: Login thành công", data);
+
+      // Lưu token và thông tin user
+      localStorage.setItem("authToken", data.token);
+      const user: User = {
         userId: data.userId,
         username: data.username,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         role: data.role,
-      })
-    );
+      };
+      localStorage.setItem("user", JSON.stringify(user));
+      console.log("💾 authService: Đã lưu user vào localStorage");
 
-    return data;
+      return data;
+    } catch (error) {
+      console.error("❌ authService: Lỗi login", error);
+      
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error("Lỗi đăng nhập không xác định");
+      }
+    }
   },
-
-  // ------------------- 2. Đăng xuất -------------------
   logout: (): void => {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
+    localStorage.removeItem("user");
     window.location.href = "/login";
   },
 
-  // ------------------- 3. Lấy thông tin user hiện tại -------------------
-  getCurrentUser: (): LoginResponse | null => {
-    const userData = localStorage.getItem("userData");
+  getCurrentUser: (): User | null => {
+    const userData = localStorage.getItem("user");
     if (!userData) return null;
     try {
-      return JSON.parse(userData);
+      return JSON.parse(userData) as User;
     } catch {
       return null;
     }

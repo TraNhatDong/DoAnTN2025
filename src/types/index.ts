@@ -10,7 +10,7 @@ export interface Meeting {
   id: number;
   name: string;
   description: string;
-  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'PENDING' |'APPROVED'|'ONGOING'| 'COMPLETED' |'CANCELLED';
   startTime: string;
   endTime: string;
   roomId: number;
@@ -30,15 +30,11 @@ export interface User {
 }
 
 export interface Room {
-  id: string;
-  name: string;
+  roomId: number;
+  roomName: string;
   capacity: number;
-  location: string;
-  facilities: string[];
-  status: 'available' | 'occupied' | 'maintenance';
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+  floor: number;
+  status: "AVAI" | "INAVAI";
 }
 
 export interface Transcript {
@@ -70,11 +66,12 @@ export interface ActionItem {
   status: "PENDING" | "CONFIRMED" | "REJECTED";
   comment: string | null;
   reviewed_at: string | null;
+  handled: boolean | null;
 }
 export interface Summary {
   summary_id: string;
   meeting_id: string;
-status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL" | "APPROVAL" | "published"|"REVIEWED";
+  status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL" | "APPROVED" | "PUBLISHED"|"REVIEWED";
 
   content: string;
   created_by: string;
@@ -153,13 +150,15 @@ export interface RegisterRequest {
 }
 
 export interface CreateMeetingRequest {
-  title: string;
+  name: string;
   description: string;
   startTime: string;
   endTime: string;
-  roomId: string;
-  participantIds: string[];
-  agenda?: string[];
+  roomId: number;
+  participants: {
+    userId: number;
+    role: "CT" | "TK" | "TV";
+  }[];
 }
 
 export interface UpdateMeetingRequest {
@@ -167,10 +166,12 @@ export interface UpdateMeetingRequest {
   description?: string;
   startTime?: string;
   endTime?: string;
-  roomId?: string;
-  participantIds?: string[];
-  agenda?: string[];
-  status?: Meeting['status'];
+  roomId?: Number;
+  participants: {
+    userId: number;
+    role: "CT" | "TK" | "TV";
+  }[];
+
 }
 
 export interface CreateRoomRequest {
@@ -227,29 +228,38 @@ export interface RoomFilter {
   facilities?: string[];
 }
 
+
 // Pagination
 export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  userId: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  phoneNumber: string;
+  birthday: string; // hoặc Date nếu bạn parse sang Date object
+  idCard: string;
+  accountUsername: string;
+  accountStatus: "ACTIVE" | "INACTIVE"; // nếu chỉ có 2 trạng thái
+  userStatus: "ACTIVE" | "INACTIVE";
+  accountId: number;
+  role: "USER" | "ADMIN" | "CT" | "TK"; 
 }
 // src/types/signature.ts
 export interface Minute {
-  id: string;
-  meetingId: string;
-  pdfPath: string;
-  sigPath?: string;
-  status: 'draft' | 'signed' | 'released';
-  createdAt: string;
-  updatedAt: string;
+  pdfPath: string;      // Đường dẫn tới file PDF
+  minuteId: string;     // ID của biên bản
+  meetingId: string; 
+  sigPath: string;
+  createdAt?: string;   // ID của cuộc họp
+  status: "GENERATED" |"SIGNED" | "PUBLISHED"; // Các trạng thái có thể có
 }
 
 export interface GenerateMinuteResponse {
   message: string;
   minuteId: string;
   meetingId: string;
-  status: string;
+  status: "GENERATED" |"SIGNED" | "PUBLISHED";
   pdfPath: string;
 }
 
@@ -257,7 +267,7 @@ export interface SignMinuteResponse {
   message: string;
   minuteId: string;
   meetingId: string;
-  status: string;
+  status: "GENERATED" |"SIGNED" | "PUBLISHED";
   pdfPath: string;
   sigPath: string;
 }
@@ -278,7 +288,7 @@ export interface ReleaseResponse {
   message: string;
   minuteId: string;
   meetingId: string;
-  status: string;
+  status: "GENERATED" |"SIGNED" | "PUBLISHED";
   pdfPath: string;
   sigPath: string;
 }

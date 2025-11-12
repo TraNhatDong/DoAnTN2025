@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Lock as LockIcon } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -28,6 +28,9 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = (location.state as any)?.from?.pathname; // trang muốn đến trước khi login
 
   const [formData, setFormData] = useState({
     username: "",
@@ -37,33 +40,59 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    document.getElementsByName("username")[0]?.focus();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: name === "remember" ? checked : value,
     }));
+    // ❌ Không reset error tự động
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  // ❌ KHÔNG clear error ở đây nữa
+  // setError("");
+
+  if (!formData.username || !formData.password) {
+    setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    console.log("🔄 Bắt đầu login...");
+    const user = await login(formData.username, formData.password);
+    console.log("✅ Login thành công, user:", user);
+
+    // ✅ Clear error chỉ khi thành công
     setError("");
 
-    if (!formData.username || !formData.password) {
-      setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
-      return;
+    if (from) {
+      navigate(from, { replace: true });
+    } else {
+      navigate(user.role === "ADMIN" ? "/admin" : "/meetings", { replace: true });
     }
-
-    setIsLoading(true);
-    try {
-      await login(formData.username, formData.password);
-      navigate("/"); // tự động redirect dựa trên role
-    } catch (err) {
-      setError("Đăng nhập thất bại. Vui lòng thử lại.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } catch (err: any) {
+    console.error("❌ Lỗi đăng nhập trong catch:", err);
+    
+    const msg =
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "Đăng nhập thất bại. Vui lòng thử lại.";
+    
+    console.log("🚨 Setting error message:", msg);
+    setError(msg);
+    
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Box
@@ -85,7 +114,7 @@ const Login: React.FC = () => {
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity="error" sx={{ mb: 3, animation: "fadeIn 0.5s" }}>
             {error}
           </Alert>
         )}
@@ -100,6 +129,7 @@ const Login: React.FC = () => {
             margin="normal"
             variant="outlined"
             required
+            autoFocus
           />
 
           <TextField
@@ -114,14 +144,7 @@ const Login: React.FC = () => {
             required
           />
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              my: 2,
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 2 }}>
             <FormControlLabel
               control={
                 <Checkbox

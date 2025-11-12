@@ -9,20 +9,48 @@ export const summaryService = {
     api.get<Transcript>(`/summaries/transcripts/${meetingId}`),
   getReviewsBySummary : (summaryId: string) =>
   api.get<Review[]>(`/summaries/summary-reviews/${summaryId}`),
-   updateReview : (summaryId: string, userId: string, data: { status?: "PENDING" | "CONFIRMED" | "REJECTED"; comment?: string }) =>
-  api.put<Review>(`/summary-reviews/update`, { summary_id: summaryId, user_id: userId, ...data }),
+
+  updateHandled: (reviewId: string) =>
+  api.put(`/summaries/summary-reviews/mark-fixed`, { review_id: reviewId }),
+
+  updateReview : (summaryId: string, userId: string, data: { status?: "PENDING" | "CONFIRMED" | "REJECTED"; comment?: string }) =>
+  api.put<Review>(`/summaries/summary-reviews/update`, { summary_id: summaryId, user_id: userId, ...data }),
   addReviews : (summaryId: string, reviewers: string[], status: "PENDING" | "CONFIRMED" | "REJECTED" = "PENDING", comment?: string) =>
-  api.post<{ message: string; reviews: Review[] }>(`/summary-reviews`, {
+  api.post<{ message: string; reviews: Review[] }>(`/summaries/summary-reviews`, {
     summary_id: summaryId,
     reviewers,
     status,
     comment,
   }),
+  updateStatus: (
+    summaryId: string,
+    status: string
+  ) =>
+    api.put(`/summaries/update-status`, {
+      summary_id: summaryId,
+      status,
+    }),
+
+  // 🔹 Cập nhật nội dung biên bản (thư ký chỉnh sửa, tạo bản mới)
+  updateContent: (
+    meetingId: number,
+    content: string,
+    updatedBy: string
+  ) =>
+    api.post(`/summaries/update-content`, {
+      meeting_id: meetingId,
+      content,
+      updated_by: updatedBy,
+    }),
 
   
-  
-  updateSummary: (meetingId: string, content: string, keyPoints?: string[]) => 
-    api.put<ApiResponse<Summary>>(`/summary/${meetingId}`, { content, keyPoints }),
+  updateSummary: (meetingId: number, updatedBy: string, content: string) =>
+  api.post(`/summaries/update-content`, {
+    meeting_id: meetingId,
+    updated_by: updatedBy,
+    content: content,
+  }),
+
   
   getSummaryStatus: (jobId: string) => 
     api.get<ApiResponse<{ status: string; summary?: Summary }>>(`/summary/status/${jobId}`),

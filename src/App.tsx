@@ -4,11 +4,13 @@ import { useAuth } from "./context/AuthContext";
 import { MeetingRoleProvider } from "./context/MeetingRoleContext";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
-import UserDashboard from "./pages/User/UserDashboard";
 import MeetingList from "./pages/Meetings/MeetingList";
 import MeetingDetail from "./pages/Meetings/MeetingDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MeetingCalendar from "./pages/Meetings/MeetingCalendar";
+import VerifyMinutePage from "./pages/Meetings/VerifyMinutePage";
+import VerifyMinutePage1 from "./pages/Meetings/VerifyMinutePage1";
+import UserProfile  from "./components/layout/UserProfile";
 
 const RoleRedirect: React.FC = () => {
   const { user } = useAuth();
@@ -16,7 +18,7 @@ const RoleRedirect: React.FC = () => {
   return user.role === "ADMIN" ? (
     <Navigate to="/admin" replace />
   ) : (
-    <Navigate to="/dashboard" replace />
+    <Navigate to="/meetings" replace />
   );
 };
 
@@ -32,14 +34,6 @@ const App: React.FC = () => (
           element={
             <ProtectedRoute role="ADMIN">
               <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute role="USER">
-              <UserDashboard />
             </ProtectedRoute>
           }
         />
@@ -64,6 +58,30 @@ const App: React.FC = () => (
           element={
             <ProtectedRoute role="USER">
               <MeetingCalendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verify"
+          element={
+            <ProtectedRoute role="USER">
+              <VerifyMinutePage />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/verify/:id"
+          element={
+            <ProtectedRoute role="USER">
+              <VerifyMinutePage1 />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/profile"
+          element={
+            <ProtectedRoute role="USER">
+              <UserProfile />
             </ProtectedRoute>
           }
         />

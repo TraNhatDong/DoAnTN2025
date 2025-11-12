@@ -1,4 +1,4 @@
-// src/services/api.ts
+
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
@@ -8,10 +8,10 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 30000, // <-- ở đây trước bị dư chữ 's'
+  timeout: 30000, 
 });
 
-// 🔹 Request interceptor
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -23,14 +23,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🔹 Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("userData");
-      window.location.href = "/login";
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

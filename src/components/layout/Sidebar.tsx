@@ -32,7 +32,8 @@ import {
   BarChart,
   Report,
   Security,
-  MenuBook
+  MenuBook,
+  CalendarMonth
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -73,13 +74,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       label: 'Lịch họp',
-      icon: <ShoppingCart />,
+      icon: <CalendarMonth />,
        path: '/calendar'
-    },
-    {
-      label: 'Phòng họp',
-      icon: <People />,
-      path: '/rooms'
     },
     {
       label: 'Báo cáo',
@@ -90,11 +86,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       label: 'Cài đặt',
       icon: <Settings />,
+       role: ['ADMIN'],
       children: [
         {
           label: 'Hệ thống',
           icon: <Settings />,
           path: '/system-settings'
+          
         },
         {
           label: 'Người dùng',
