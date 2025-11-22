@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: meeting-service
+
+  datasource:
+    url: jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: meeting-service
+server:
+  port: 8080
+  address: 0.0.0.0 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+notification:
+  exchange: notification.exchange
+  key: notification.key
+
+

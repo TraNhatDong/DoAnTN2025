@@ -1,0 +1,388 @@
+version: "3.9"
+
+services:
+  # ==========================
+  # MySQL
+  # ==========================
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: meetingdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # RabbitMQ
+  # ==========================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # MinIO
+  # ==========================
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: always
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # Audio Service
+  # ==========================
+  audio-service:
+    build: ./audio-service
+    container_name: audio-service
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - DATABASE_URL=mysql+pymysql://user:password@mysql:3306/meetingdb
+      - RABBITMQ_HOST=rabbitmq
+      - EUREKA_SERVER=http://eureka-server:8761/eureka
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - spring-cloud-network
+
+  audio-worker:
+    build: ./audio-service
+    container_name: audio-worker
+    restart: always
+    command: ["python", "worker.py"]
+    environment:
+      - PORT=8080
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - DATABASE_URL=mysql+pymysql://user:password@mysql:3306/meetingdb
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # Summarization Service
+  # ==========================
+  summarization-service:
+    build: ./summarization-service
+    container_name: summarization-service
+    restart: always
+    ports:
+      - "8082:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=mysql+pymysql://user:password@mysql:3306/meetingdb
+      - RABBITMQ_HOST=rabbitmq
+      - EUREKA_SERVER=http://eureka-server:8761/eureka
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - spring-cloud-network
+
+  summarization-worker:
+    build: ./summarization-service
+    container_name: summarization-worker
+    restart: always
+    command: ["python", "worker.py"]
+    environment:
+      - PORT=8080
+      - DATABASE_URL=mysql+pymysql://user:password@mysql:3306/meetingdb
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # Signature Service
+  # ==========================
+  signature-service:
+    build: ./signature-service
+    container_name: signature-service
+    ports:
+      - "8083:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=signature-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=signature-service
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESSKEY=minioadmin
+      - MINIO_SECRETKEY=minioadmin
+      - MINIO_BUCKET=meeting-pdf
+      - SIGNATURE_GPGHOME=/gnupg
+      - SIGNATURE_GPGUSER=tranhatdong1808@gmail.com
+      - SIGNATURE_ARMORED=true
+      - GNUPGHOME=/gnupg
+    volumes:
+      - ./keys:/keys:ro
+      - gnupg_data:/gnupg
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+    networks:
+      - spring-cloud-network
+  # ==========================
+  # User Service
+  # ==========================
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    restart: always
+    ports:
+      - "8085:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=user-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=user-service
+
+      # Database
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - spring-cloud-network
+  
+  # ==========================
+  # Meeting Service
+  # ==========================
+  meeting-service:
+    build: ./meeting-service
+    container_name: meeting-service
+    restart: always
+    ports:
+      - "8086:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=meeting-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=meeting-service
+
+      # Database
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - spring-cloud-network
+# ==========================
+  # Room Service
+  # ==========================
+  room-service:
+    build: ./room-service
+    container_name: room-service
+    restart: always
+    ports:
+      - "8087:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=room-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=room-service
+
+      # Database
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - spring-cloud-network
+  # ==========================
+  # Notification Service + Mailhog
+  # ==========================
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "8084:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - NOTIFICATION_EXCHANGE=notification.exchange
+      - NOTIFICATION_QUEUE=notification.queue
+      - NOTIFICATION_ROUTINGKEY=notification.key
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - spring-cloud-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - spring-cloud-network
+
+  # ==========================
+  # Eureka Server
+  # ==========================
+  eureka-server:
+    build: ./EurekaServer
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - spring-cloud-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================
+  # API Gateway
+  # ==========================
+  api-gateway:
+    build: ./APIGateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      signature-service:
+        condition: service_healthy
+    networks:
+      - spring-cloud-network
+    
+
+networks:
+  spring-cloud-network:
+    driver: bridge
+
+volumes:
+  gnupg_data:

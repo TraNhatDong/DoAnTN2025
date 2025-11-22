@@ -1,0 +1,16 @@
+com\example\signature\service\GpgService.class
+com\example\signature\service\SignatureService.class
+com\example\signature\entity\Minute.class
+com\example\signature\repository\MinuteRepository.class
+com\example\signature\service\SignatureService$ActionItem.class
+com\example\signature\service\UserService.class
+com\example\signature\service\SummarizationService.class
+com\example\signature\config\AppConfig.class
+com\example\signature\service\NotificationProducer.class
+com\example\signature\service\SignatureService$MinuteData.class
+com\example\signature\service\SignatureService$ParticipantInfo.class
+com\example\signature\config\RabbitMQConfig.class
+com\example\signature\controller\SignatureController.class
+com\example\signature\service\MeetingService.class
+com\example\signature\SignatureServiceApplication.class
+com\example\signature\service\MinioService.class
