@@ -30,7 +30,7 @@ import {
   Description,
   Room,
   Email,
-  ResetTv,
+RestartAlt,
   Edit,
   Leaderboard,
   Groups,
@@ -50,6 +50,7 @@ import MinutesTab from "../../components/Minutes/MinutesTab";
 import type { Meeting, MeetingParticipant } from "../../types";
 import { meetingService } from "../../services/meetingService";
 import { userService } from "../../services/userService";
+import { roomService } from "../../services/roomService";
 import { EditMeetingDialog } from "./EditMeetingDialog";
 import { ResetMeetingDialog } from "./ResetMeetingDialog";
 const ROLE_LABELS: { [key: string]: string } = {
@@ -206,6 +207,17 @@ const ErrorState: React.FC<{ message: string }> = ({ message }) => (
     </Box>
   </MainLayout>
 );
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "DRAFT": return "BẢN NHÁP";
+    case "PENDING": return "CHỜ DUYỆT";
+    case "APPROVED": return "ĐÃ DUYỆT";
+    case "ONGOING": return "ĐANG DIỄN RA";
+    case "COMPLETED": return "ĐÃ KẾT THÚC";
+    case "CANCELLED": return "ĐÃ HỦY";
+    default: return "KHÔNG XÁC ĐỊNH";
+  }
+};
 
 const MeetingHeader: React.FC<{ 
   meeting: Meeting; 
@@ -238,11 +250,21 @@ const MeetingHeader: React.FC<{
         </Typography>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2, flexWrap: 'wrap' }}>
-          <Chip 
-            label={meeting.status} 
-            color="primary" 
-            sx={{ color: 'white', fontWeight: 600 }}
-          />
+       <Chip 
+  label={getStatusLabel(meeting.status)}
+  sx={{
+    backgroundColor: meeting.status === "DRAFT" ? "#9e9e9e" :
+                     meeting.status === "PENDING" ? "#ff9800" :
+                     meeting.status === "APPROVED" ? "#4caf50" :
+                     meeting.status === "ONGOING" ? "#2196f3" :
+                     meeting.status === "COMPLETED" ? "#757575" :
+                     meeting.status === "CANCELLED" ? "#f44336" : "#e0e0e0",
+    color: "white",
+    fontWeight: 600
+  }}
+/>
+
+
           <Chip 
             label={`Vai trò: ${userRole}`}
             variant="outlined" 
@@ -296,21 +318,50 @@ const MeetingInfoTab: React.FC<MeetingInfoTabProps> = ({
   const [cancelReason, setCancelReason] = useState("");
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+   const [roomName, setRoomName] = useState<any>("Đang tải...");
+
 
   const chairman = useMemo(() => 
     participantsInfo.find(p => p.role === "CT"),
     [participantsInfo]
   );
+useEffect(() => {
+  const fetchRoom = async () => {
+    if (!meeting.roomId) {
+      setRoomName("Chưa xác định");
+      return;
+    }
+
+    try {
+      const response = await roomService.getRoom(meeting.roomId);
+      setRoomName(response.data);   // tùy theo backend trả về "name"
+    } catch (error) {
+      console.error("Lỗi lấy phòng:", error);
+      setRoomName("Không lấy được tên phòng");
+    }
+  };
+
+  fetchRoom();
+}, [meeting.roomId]);
 
   const meetingStatus = useMemo(() => {
-    const now = new Date();
-    const start = new Date(meeting.startTime);
-    const end = new Date(meeting.endTime);
-    
-    if (now < start) return { text: "Sắp diễn ra", color: "warning" };
-    if (now >= start && now <= end) return { text: "Đang diễn ra", color: "success" };
-    return { text: "Đã kết thúc", color: "default" };
-  }, [meeting]);
+  switch (meeting.status) {
+    case "DRAFT":
+      return { text: "BẢN NHÁP", color: "default" };
+    case "PENDING":
+      return { text: "CHỜ DUYỆT", color: "warning" };
+    case "APPROVED":
+      return { text: "ĐÃ DUYỆT", color: "success" };
+    case "ONGOING":
+      return { text: "ĐANG DIỄN RA", color: "success" };
+    case "COMPLETED":
+      return { text: "ĐÃ KẾT THÚC", color: "default" };
+    case "CANCELLED":
+      return { text: "ĐÃ HỦY", color: "error" };
+    default:
+      return { text: "KHÔNG XÁC ĐỊNH", color: "default" };
+  }
+}, [meeting]);
 
   const calculateDuration = (start: string, end: string): string => {
     const startTime = new Date(start);
@@ -363,16 +414,16 @@ const MeetingInfoTab: React.FC<MeetingInfoTabProps> = ({
                 Thông tin cuộc họp
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip 
-                label={meetingStatus.text} 
-                color={meetingStatus.color as any}
-                variant="filled"
-                size="small"
-              />
-            </Box>
+            
           </Box>
-
+ {/* Hiển thị lý do hủy nếu có */}
+          {meeting.status === "CANCELLED" && (
+            <Box sx={{ mb: 3, p: 3, bgcolor: 'error.50', borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+              <Typography variant="subtitle1" color="error.main" gutterBottom>Cuộc họp đã bị hủy</Typography>
+      
+              {meeting.cancelReason && <Typography variant="body2">Lý do hủy: <strong>{meeting.cancelReason}</strong></Typography>}
+            </Box>
+          )}
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
             {/* Cột trái - Thông tin cơ bản */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -437,8 +488,9 @@ const MeetingInfoTab: React.FC<MeetingInfoTabProps> = ({
                     ĐỊA ĐIỂM
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {meeting.roomId ? `Phòng ${meeting.roomId}` : "Chưa xác định"}
-                  </Typography>
+  {roomName.roomName}- Tầng {roomName.floor}
+</Typography>
+
                 </Box>
               </Box>
             </Box>
@@ -497,7 +549,7 @@ const MeetingInfoTab: React.FC<MeetingInfoTabProps> = ({
             </Box>
           </Box>
 
-          {meetingStatus.text === "Đang diễn ra" && (
+          {meetingStatus.text === "ĐANG DIỄN RA" && (
             <Box sx={{ mt: 4, p: 2, bgcolor: 'success.50', borderRadius: 2 }}>
               <Typography variant="caption" fontWeight={600} color="success.main" display="block" mb={1}>
                 CUỘC HỌP ĐANG DIỄN RA
@@ -609,7 +661,7 @@ const MeetingInfoTab: React.FC<MeetingInfoTabProps> = ({
         {(userRole === "Thư ký" && (meeting.status === "CANCELLED" || meeting.status === "COMPLETED")) && (
           <Button
             variant="contained"
-            startIcon={<ResetTv />}
+            startIcon={<RestartAlt />}
             onClick={onReset}
             fullWidth
             sx={{
@@ -671,6 +723,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+ 
 
   const approvedCount = useMemo(
     () => participantsInfo.filter(p => p.status === "Approve" && p.role === "TV").length,
@@ -782,22 +835,23 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
               </Typography>
             </Box>
             
-            {userRole === "Thư ký" && (
-              <Button
-                variant="contained"
-                startIcon={<PersonAdd />}
-                onClick={() => setOpenAddDialog(true)}
-                sx={{ 
-                  borderRadius: 2, 
-                  textTransform: 'none', 
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1
-                }}
-              >
-                Thêm thành viên
-              </Button>
-            )}
+           {userRole === "Thư ký" && !["ONGOING", "COMPLETED", "CANCELLED"].includes(meeting.status) && (
+  <Button
+    variant="contained"
+    startIcon={<PersonAdd />}
+    onClick={() => setOpenAddDialog(true)}
+    sx={{ 
+      borderRadius: 2, 
+      textTransform: 'none', 
+      fontWeight: 600,
+      px: 3,
+      py: 1
+    }}
+  >
+    Thêm thành viên
+  </Button>
+)}
+
           </Box>
         </CardContent>
       </Card>
@@ -890,7 +944,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
                             </Typography>
                           )}
 
-                          {(userRole === "Chủ trì" || userRole === "Thư ký") && (
+                          {(p.role !== "TK")&&(userRole === "Chủ trì" || userRole === "Thư ký") && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                               <Chip
                                 label={STATUS_CONFIG[p.status]?.label || p.status}
@@ -902,14 +956,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
                           )}
                         </Box>
 
-                        {userRole === "Thành viên" && p.status !== "Approve" && (
-                          <Chip
-                            label={STATUS_CONFIG[p.status]?.label || p.status}
-                            size="small"
-                            color={STATUS_CONFIG[p.status]?.color || "default"}
-                            variant="filled"
-                          />
-                        )}
+                     
                       </Box>
                     </Card>
                   ))}
@@ -1084,7 +1131,7 @@ const MeetingDetail: React.FC = () => {
   }, []);
 
   const handleInfoClick = useCallback(() => {
-    setActiveTab(1);
+    setActiveTab(0);
   }, []);
 
   const reloadMeeting = useCallback(async () => {

@@ -6,12 +6,14 @@ import { summaryService } from "../../services/summaryService";
 import { audioService } from "../../services/audioService";
 import { signatureService } from "../../services/signatureService";
 import { useNavigate } from "react-router-dom";
+import type { Meeting,TranscriptData,SummaryData,ReviewData,MinuteData } from "../../types";
 
 import {
   Box,
   Card,
   CardContent,
   Typography,
+  
   Button,
   LinearProgress,
   Tabs,
@@ -45,6 +47,7 @@ import {
   CloudUpload,
   Description,
   CheckCircle,
+  AssignmentTurnedIn,
   PictureAsPdf,
   EditNote,
   Approval,
@@ -72,48 +75,6 @@ interface MinutesTabProps {
   meetingId: string;
   role: string;
   currentUserId: number;
-}
-
-export interface TranscriptData {
-  transcript_id: string;
-  meeting_id: string;
-  content: string;
-  status: "PROCESSING" | "COMPLETED" | "FAILED";
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  error_message?: string;
-}
-
-export interface SummaryData {
-  summary_id: string;
-  meeting_id: string;
-  status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL"| "PUBLISHED" | "REVIEWED"|"APPROVED";
-  content: string;
-  created_by: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-interface ReviewData {
-  review_id: string;
-  summary_id: string;
-  user_id: string;
-  status: "PENDING" | "CONFIRMED" | "REJECTED";
-  comment: string | null;
-  reviewed_at: string | null;
-  handled: boolean | null; // ✅ true = đã sửa, false = chưa, null = chưa được set
-}
-
-
-export interface MinuteData {
-  pdfPath: string;
-  minuteId: string;
-  meetingId: string; 
-  sigPath?: string;
-  createdAt?: string;
-  status: "GENERATED" | "SIGNED" | "PUBLISHED";
-  downloadCount?: number;
 }
 
 interface User {
@@ -145,6 +106,7 @@ const MinutesTab: React.FC<MinutesTabProps> = ({ meetingId, role, currentUserId 
   const [transcript, setTranscript] = useState<TranscriptData | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [minute, setMinute] = useState<MinuteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -191,14 +153,16 @@ const MinutesTab: React.FC<MinutesTabProps> = ({ meetingId, role, currentUserId 
     }
 
     try {
-      const [participantsRes, transcriptRes, summaryRes, minuteRes] = await Promise.all([
+      const [participantsRes, transcriptRes, summaryRes, minuteRes,meetingres] = await Promise.all([
         fetchParticipants(),
         summaryService.getTranscript(meetingId).catch(() => null),
         summaryService.getSummary(meetingId).catch(() => null),
-        signatureService.getMinuteMeeting(meetingId).catch(() => null)
+        signatureService.getMinuteMeeting(meetingId).catch(() => null),
+        meetingService.getMeeting(Number(meetingId))
       ]);
 
       setParticipants(participantsRes);
+      setMeeting(meetingres.data);
 
       if (transcriptRes?.data) {
         setTranscript(transcriptRes.data);
@@ -713,7 +677,7 @@ const getWorkflowSteps = (): WorkflowStep[] => {
             disabled={uploading}
             sx={{ minWidth: 200 }}
           >
-            {audioFile ? audioFile.name : "Chọn file audio..."}
+            {audioFile ? audioFile .name : "Chọn file audio..."}
             <input
               type="file"
               hidden
@@ -1382,6 +1346,59 @@ const renderWorkflowStepper = () => {
       </Alert>
     );
   };
+  // Nếu cuộc họp chưa kết thúc
+if (meeting?.status !== "COMPLETED") {
+
+  // Nếu là thư ký
+  if (role ==="Thư ký") {
+    return (
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 400,
+        flexDirection: 'column',
+        textAlign: 'center',
+        p: 3
+      }}>
+        <AssignmentTurnedIn
+          sx={{ fontSize: 64, color: 'primary.main', mb: 2 }}
+        />
+
+        <Typography variant="h5" gutterBottom color="primary">
+          Chờ cuộc họp kết thúc để upload file audio
+        </Typography>
+
+        <Typography variant="body1" color="textSecondary">
+          Khi cuộc họp chuyển sang trạng thái <strong>Kết thúc</strong>, 
+          bạn sẽ thấy nút <strong>Upload file audio</strong>.
+        </Typography>
+      </Box>
+    );
+  }
+  // Nếu là thành viên
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: 400,
+      flexDirection: 'column',
+      textAlign: 'center',
+      p: 3
+    }}>
+      <Assignment sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+      <Typography variant="h5" gutterBottom color="primary">
+        Biên bản cuộc họp sẽ được cập nhật khi cuộc họp kết thúc
+      </Typography>
+      <Typography variant="body1" color="textSecondary"> 
+        Vui lòng quay lại sau khi cuộc họp kết thúc để xem biên bản chi tiết.
+      </Typography>
+    </Box>
+  );
+}
+
+
 
   // ---------------- MAIN RENDER ----------------
   if (loading) {
@@ -1411,7 +1428,8 @@ const renderWorkflowStepper = () => {
       {renderStatusAlert()}
 
       {/* Workflow Stepper */}
-      {renderWorkflowStepper()}
+     {!["DRAFT", "PENDING","APPROVED"].includes(meeting?.status ?? "") && renderWorkflowStepper()}
+
 
       {/* Published Minute View - Show for all roles when published */}
       {isPublished && renderPublishedMinute()}
@@ -1420,7 +1438,7 @@ const renderWorkflowStepper = () => {
       {!isPublished && (
         <>
           {/* Upload Section - Only for secretary when no transcript */}
-          {role === "Thư ký" && (!transcript || transcript.status === "PROCESSING" || transcript.status === "FAILED") && 
+          {role === "Thư ký"&& !["DRAFT", "PENDING","APPROVED"].includes(meeting?.status ?? "") && (!transcript || transcript.status === "PROCESSING" || transcript.status === "FAILED") && 
             renderUploadSection()
           }
 

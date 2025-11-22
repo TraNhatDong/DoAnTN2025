@@ -6,6 +6,20 @@ export interface MeetingParticipant {
   status: string;           // Ví dụ: 'Approve', 'Pending', 'Reject'
 }
 
+export interface ParticipantRequest {
+  userId: number;
+  role: "CT" | "TK" | "TV";
+}
+
+export interface MeetingRequest {
+  name: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  roomId: number;
+  participants: ParticipantRequest[];
+}
+
 export interface Meeting {
   id: number;
   name: string;
@@ -46,6 +60,17 @@ export interface Transcript {
   created_at: string;
   updated_at: string;
 }
+export interface TranscriptData {
+  transcript_id: string;
+  meeting_id: string;
+  content: string;
+  status: "PROCESSING" | "COMPLETED" | "FAILED";
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  error_message?: string;
+}
+
 
 
 export interface ActionItem {
@@ -59,79 +84,32 @@ export interface ActionItem {
   createdAt: string;
   updatedAt: string;
 }
- export interface Review {
+ 
+
+export interface ReviewData {
   review_id: string;
   summary_id: string;
   user_id: string;
   status: "PENDING" | "CONFIRMED" | "REJECTED";
   comment: string | null;
   reviewed_at: string | null;
-  handled: boolean | null;
+  handled: boolean | null; 
 }
-export interface Summary {
+
+export interface SummaryData {
   summary_id: string;
   meeting_id: string;
-  status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL" | "APPROVED" | "PUBLISHED"|"REVIEWED";
-
+  status: "DRAFT" | "PENDING_REVIEW" | "REVISED" | "PENDING_CHAIR_APPROVAL"| "PUBLISHED" | "REVIEWED"|"APPROVED";
   content: string;
   created_by: string;
   created_at: string;
-}
-
-export interface Approval {
-  id: string;
-  meetingId: string;
-  userId: string;
-  user: User;
-  approved: boolean;
-  approvedAt?: string;
-  comments?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AudioRecording {
-  id: string;
-  meetingId: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  duration: number;
-  status: 'uploading' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  transcript?: Transcript;
-  uploadUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  updated_at?: string;
 }
 
 
 
-export interface MeetingMinutes {
-  id: string;
-  meetingId: string;
-  content: string;
-  version: number;
-  status: 'draft' | 'final' | 'signed';
-  signedBy?: User;
-  signedAt?: string;
-  digitalSignature?: string;
-  pdfUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export interface Notification {
-  id: string;
-  userId: string;
-  type: 'meeting_invite' | 'approval_request' | 'transcript_ready' | 'summary_ready' | 'minutes_ready';
-  title: string;
-  message: string;
-  read: boolean;
-  relatedId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 // Request Types
 export interface LoginRequest {
@@ -149,30 +127,7 @@ export interface RegisterRequest {
   phone?: string;
 }
 
-export interface CreateMeetingRequest {
-  name: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  roomId: number;
-  participants: {
-    userId: number;
-    role: "CT" | "TK" | "TV";
-  }[];
-}
 
-export interface UpdateMeetingRequest {
-  title?: string;
-  description?: string;
-  startTime?: string;
-  endTime?: string;
-  roomId?: Number;
-  participants: {
-    userId: number;
-    role: "CT" | "TK" | "TV";
-  }[];
-
-}
 
 export interface CreateRoomRequest {
   name: string;
@@ -200,7 +155,15 @@ export interface ApiResponse<T> {
     totalPages: number;
   };
 }
-
+export interface MinuteData {
+  pdfPath: string;
+  minuteId: string;
+  meetingId: string; 
+  sigPath?: string;
+  createdAt?: string;
+  status: "GENERATED" | "SIGNED" | "PUBLISHED";
+  
+}
 // Progress Event Types
 export interface AxiosProgressEvent {
   loaded: number;

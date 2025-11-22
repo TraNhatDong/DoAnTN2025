@@ -4,18 +4,12 @@ import {
   Card,
   CardContent,
   Typography,
-  IconButton,
   Chip,
-  Menu,
-  MenuItem,
   Tooltip
 } from "@mui/material";
 import {
-  MoreVert,
   CalendarMonth,
   AccessTime,
-  Edit,
-  Delete,
   Person,
   MeetingRoom
 } from "@mui/icons-material";
@@ -58,28 +52,15 @@ const getTimeUntilMeeting = (startTime: string) => {
   return `${minutes} phút`;
 };
 
-// Kiểm tra xem cuộc họp có đang diễn ra không
-const isMeetingOngoing = (startTime: string, endTime: string) => {
-  const now = new Date();
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  return now >= start && now <= end;
-};
 
 interface MeetingCardProps {
   meeting: MeetingWithCTName;
-  onEdit?: (meeting: MeetingWithCTName) => void;
-  onDelete?: (meeting: MeetingWithCTName) => void;
 }
 
 const MeetingCard: React.FC<MeetingCardProps> = ({ 
   meeting, 
-  onEdit, 
-  onDelete, 
 }) => {
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case "DRAFT":
@@ -139,7 +120,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   };
   const statusInfo = getStatusDisplay(meeting.status);
   const timeUntilMeeting = getTimeUntilMeeting(meeting.startTime);
-  const isOngoing = isMeetingOngoing(meeting.startTime, meeting.endTime);
+  const isOngoing = meeting.status==="ONGOING"
 
   return (
     <Card
@@ -200,7 +181,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
         )}
 
         {/* Badge đang diễn ra */}
-        {isOngoing && (
+        {meeting.status === "ONGOING"  && (
           <Box
             sx={{
               position: "absolute",

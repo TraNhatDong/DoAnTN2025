@@ -36,45 +36,7 @@ import { meetingService } from "../../services/meetingService";
 import { userService } from "../../services/userService";
 import { roomService } from "../../services/roomService";
 import { useAuth } from "../../context/AuthContext";
-
-// Sử dụng interface PaginationParams từ API
-interface PaginationParams {
-  userId: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  phoneNumber: string;
-  birthday: string;
-  idCard: string;
-  accountUsername: string;
-  accountStatus: "ACTIVE" | "INACTIVE";
-  userStatus: "ACTIVE" | "INACTIVE";
-  accountId: number;
-  role: "USER" | "ADMIN" | "CT" | "TK"; 
-}
-
-export interface Room {
-  roomId: number;
-  roomName: string;
-  capacity: number;
-  floor: number;
-  status: "AVAI" | "INAVAI";
-}
-
-interface ParticipantRequest {
-  userId: number;
-  role: "CT" | "TK" | "TV";
-}
-
-interface CreateMeetingRequest {
-  name: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  roomId: number;
-  participants: ParticipantRequest[];
-}
+import type { PaginationParams , Room ,MeetingRequest,ParticipantRequest} from "../../types";
 
 interface CreateMeetingDialogProps {
   open: boolean;
@@ -82,7 +44,7 @@ interface CreateMeetingDialogProps {
   onCreated: () => void;
 }
 
-interface FormErrors {
+ interface FormErrors {
   name?: string;
   startTime?: string;
   endTime?: string;
@@ -91,7 +53,7 @@ interface FormErrors {
   thanhVien?: string;
 }
 
-interface FormData {
+ interface FormData {
   name: string;
   description: string;
   startTime: string;
@@ -260,7 +222,7 @@ export const CreateMeetingDialog: React.FC<CreateMeetingDialogProps> = ({
   };
 
   // Chuẩn bị data để gửi API
-const prepareMeetingData = (): CreateMeetingRequest => {
+const prepareMeetingData = (): MeetingRequest => {
   const participants: ParticipantRequest[] = [];
 
   if (formData.chuTri) {

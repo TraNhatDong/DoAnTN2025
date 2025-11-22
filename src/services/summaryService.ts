@@ -1,22 +1,22 @@
 import api from './api';
-import type { Review,Transcript, Summary, ActionItem, Approval, MeetingMinutes, Notification, ApiResponse } from '../types';
+import type { ReviewData,Transcript, SummaryData, ActionItem, ApiResponse } from '../types';
 
 
 export const summaryService = {
   getSummary: (meetingId: string) => 
-    api.get<Summary>(`/summaries/${meetingId}`),
+    api.get<SummaryData>(`/summaries/${meetingId}`),
   getTranscript: (meetingId: string) => 
     api.get<Transcript>(`/summaries/transcripts/${meetingId}`),
   getReviewsBySummary : (summaryId: string) =>
-  api.get<Review[]>(`/summaries/summary-reviews/${summaryId}`),
+  api.get<ReviewData[]>(`/summaries/summary-reviews/${summaryId}`),
 
   updateHandled: (reviewId: string) =>
   api.put(`/summaries/summary-reviews/mark-fixed`, { review_id: reviewId }),
 
   updateReview : (summaryId: string, userId: string, data: { status?: "PENDING" | "CONFIRMED" | "REJECTED"; comment?: string }) =>
-  api.put<Review>(`/summaries/summary-reviews/update`, { summary_id: summaryId, user_id: userId, ...data }),
+  api.put<ReviewData>(`/summaries/summary-reviews/update`, { summary_id: summaryId, user_id: userId, ...data }),
   addReviews : (summaryId: string, reviewers: string[], status: "PENDING" | "CONFIRMED" | "REJECTED" = "PENDING", comment?: string) =>
-  api.post<{ message: string; reviews: Review[] }>(`/summaries/summary-reviews`, {
+  api.post<{ message: string; reviews: ReviewData[] }>(`/summaries/summary-reviews`, {
     summary_id: summaryId,
     reviewers,
     status,
@@ -69,47 +69,6 @@ export const summaryService = {
     api.get<ApiResponse<{ status: string; transcript?: Transcript }>>(`/transcripts/status/${jobId}`)
 };
 
-export const approvalService = {
-  approveTranscript: (meetingId: string, comments?: string) => 
-    api.post<ApiResponse<Approval>>(`/approvals/${meetingId}/approve`, { comments }),
-  
-  rejectTranscript: (meetingId: string, comments: string) => 
-    api.post<ApiResponse<Approval>>(`/approvals/${meetingId}/reject`, { comments }),
-  
-  getApprovals: (meetingId: string) => 
-    api.get<ApiResponse<Approval[]>>(`/approvals/${meetingId}`),
-  
-  getUserApprovals: () => 
-    api.get<ApiResponse<Approval[]>>('/approvals/my-approvals'),
-};
 
-export const minutesService = {
-  generateMinutes: (meetingId: string) => 
-    api.post<ApiResponse<{ jobId: string; minutes: MeetingMinutes }>>(`/minutes/generate/${meetingId}`),
-  
-  getMinutes: (meetingId: string) => 
-    api.get<ApiResponse<MeetingMinutes>>(`/minutes/${meetingId}`),
-  
-  signMinutes: (meetingId: string, signature: string) => 
-    api.post<ApiResponse<MeetingMinutes>>(`/minutes/${meetingId}/sign`, { signature }),
-  
-  downloadMinutes: (meetingId: string) => 
-    api.get<Blob>(`/minutes/${meetingId}/download`, { responseType: 'blob' }),
-  
-  getMinutesHistory: (meetingId: string) => 
-    api.get<ApiResponse<MeetingMinutes[]>>(`/minutes/${meetingId}/history`),
-};
 
-export const notificationService = {
-  getNotifications: () => 
-    api.get<ApiResponse<Notification[]>>('/notifications'),
-  
-  markAsRead: (notificationId: string) => 
-    api.patch<ApiResponse<Notification>>(`/notifications/${notificationId}/read`),
-  
-  markAllAsRead: () => 
-    api.patch<ApiResponse<null>>('/notifications/read-all'),
-  
-  getUnreadCount: () => 
-    api.get<ApiResponse<{ count: number }>>('/notifications/unread-count'),
-};
+

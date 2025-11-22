@@ -68,51 +68,55 @@ const MeetingList: React.FC = () => {
 const fetchMeetings = async () => {
   try {
     setLoading(true);
-    const response = await meetingService.getAllMeetings();
-    const meetingsData: MeetingWithCTName[] = response.data;
+    if (user?.userId !== undefined) { // ✅ check undefined
+      const response = await meetingService.getMeetingsByUser(user.userId); // dùng user.userId an toàn
+      const meetingsData: MeetingWithCTName[] = response.data;
 
-    const meetingsWithCTName = await Promise.all(
-      meetingsData.map(async (meeting) => {
-        // --- Gắn Chủ trì ---
-        const ct = meeting.participants.find((p) => p.role === "CT");
-        let ctName = "Chưa có";
-        if (ct) {
-          try {
-            const userRes = await userService.getUser(ct.userId);
-            ctName = `${userRes.data.firstName} ${userRes.data.lastName}`;
-          } catch {
-            ctName = "Chưa có";
+      const meetingsWithCTName = await Promise.all(
+        meetingsData.map(async (meeting) => {
+          // --- Gắn Chủ trì ---
+          const ct = meeting.participants.find((p) => p.role === "CT");
+          let ctName = "Chưa có";
+          if (ct) {
+            try {
+              const userRes = await userService.getUser(ct.userId);
+              ctName = `${userRes.data.firstName} ${userRes.data.lastName}`;
+            } catch {
+              ctName = "Chưa có";
+            }
           }
-        }
-        // --- Gắn thông tin phòng ---
-        let roomName = "Chưa có";
-        let floor =1;
-        try {
-          const roomRes = await roomService.getRoom(meeting.roomId);
-          roomName = roomRes.data.roomName;
-          floor = Number(roomRes.data.floor);
-        } catch {
-          roomName = "Chưa có";
-          floor = 1;
-        }
 
-        return {
-          ...meeting,
-          ctName,
-          roomName,
-          floor,
-        };
-      })
-    );
+          // --- Gắn thông tin phòng ---
+          let roomName = "Chưa có";
+          let floor = 1;
+          try {
+            const roomRes = await roomService.getRoom(meeting.roomId);
+            roomName = roomRes.data.roomName;
+            floor = Number(roomRes.data.floor);
+          } catch {
+            roomName = "Chưa có";
+            floor = 1;
+          }
 
-    setMeetings(meetingsWithCTName);
-    setFilteredMeetings(meetingsWithCTName);
+          return {
+            ...meeting,
+            ctName,
+            roomName,
+            floor,
+          };
+        })
+      );
+
+      setMeetings(meetingsWithCTName);
+      setFilteredMeetings(meetingsWithCTName);
+    }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách cuộc họp:", error);
   } finally {
     setLoading(false);
   }
 };
+
 
 
   // Hàm kiểm tra vai trò của user hiện tại trong cuộc họp - ĐÃ SỬA
@@ -124,6 +128,35 @@ const fetchMeetings = async () => {
   // Hàm áp dụng bộ lọc - ĐÃ SỬA
   const applyFilters = () => {
     let result = [...meetings];
+     
+    result = result.filter(meeting => {
+    if (meeting.status === "DRAFT") {
+      return getUserRoleInMeeting(meeting) === "TK";
+    }
+    return true;
+  });
+ result = result.filter(meeting => {
+  if (meeting.status === "PENDING") {
+    const role = getUserRoleInMeeting(meeting);
+    return role === "TK" || role === "CT";
+  }
+  return true;
+});
+ result = result.filter(meeting => {
+  const role = getUserRoleInMeeting(meeting);
+
+  if (meeting.status === "CANCELLED") {
+    if (role === "TV") {
+      // Tìm chủ trì
+      const chair = meeting.participants.find(p => p.role === "CT");
+      
+      // TV chỉ thấy nếu CT đã Approve trước đó
+      return chair?.status === "Approve";
+    }
+  }
+  return true;
+});
+
 
     // Lọc theo trạng thái
     if (filters.status !== "all") {
@@ -397,60 +430,65 @@ const fetchMeetings = async () => {
           </Paper>
         )}
 
-        {/* Loading */}
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-            <CircularProgress />
-          </Box>
-        ) : filteredMeetings.length > 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 2,
-            }}
-          >
-            {filteredMeetings.map((meeting) => (
-              <Box key={meeting.id} sx={{ width: { xs: "100%", sm: "calc(50% - 8px)", md: "calc(33.333% - 11px)", lg: "calc(25% - 12px)" } }}>
-                <MeetingCard meeting={meeting} />
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Card
-            sx={{
-              p: 5,
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-              boxShadow: 2,
-              borderRadius: 3,
-            }}
-          >
-            <VideoCall sx={{ fontSize: 60, color: "text.secondary" }} />
-            <Typography variant="h6">
-              {meetings.length === 0 ? "Chưa có cuộc họp nào" : "Không tìm thấy cuộc họp phù hợp"}
-            </Typography>
-            <Typography color="text.secondary">
-              {meetings.length === 0 
-                ? "Bạn chưa tham gia hoặc chưa có cuộc họp được lên lịch."
-                : "Hãy thử điều chỉnh bộ lọc để xem nhiều kết quả hơn."
-              }
-            </Typography>
-            {meetings.length === 0 && (
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleCreateMeeting}
-                sx={{ mt: 1 }}
-              >
-                Tạo cuộc họp đầu tiên
-              </Button>
-            )}
-          </Card>
-        )}
+       {/* Loading */}
+{loading ? (
+  <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
+    <CircularProgress />
+  </Box>
+) : filteredMeetings.length > 0 ? (
+  <Box
+    sx={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 2,
+    }}
+  >
+    {filteredMeetings.map((meeting) => (
+      <Box
+        key={meeting.id}
+        sx={{
+          width: {
+            xs: "100%",
+            sm: "calc(50% - 8px)",
+            md: "calc(33.333% - 11px)",
+            lg: "calc(25% - 12px)",
+          },
+        }}
+      >
+        <MeetingCard meeting={meeting} />
+      </Box>
+    ))}
+  </Box>
+) : (
+  <Card
+    sx={{
+      p: 5,
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 2,
+      boxShadow: 2,
+      borderRadius: 3,
+    }}
+  >
+    <VideoCall sx={{ fontSize: 60, color: "text.secondary" }} />
+    <Typography variant="h6">Chưa có cuộc họp nào</Typography>
+    <Typography color="text.secondary">
+      Bạn chưa tham gia hoặc chưa có cuộc họp được lên lịch.
+    </Typography>
+
+    <Button
+      variant="contained"
+      startIcon={<Add />}
+      onClick={handleCreateMeeting}
+      sx={{ mt: 1 }}
+    >
+      Tạo cuộc họp đầu tiên
+    </Button>
+  </Card>
+)}
+
       </Box>
 
       {/* Dialog tạo cuộc họp */}

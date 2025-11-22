@@ -197,17 +197,20 @@ const MainLayout: React.FC<Props> = ({
           {renderTitle()}
 
           {/* User Role Chip */}
-          <Chip
-            label={user?.role === "ADMIN" ? "Quản trị viên" : "Thành viên"}
-            size="small"
-            color={user?.role === "ADMIN" ? "secondary" : "primary"}
-            variant="filled"
-            sx={{
-              mr: 2,
-              display: { xs: "none", sm: "flex" },
-              fontWeight: 500,
-            }}
-          />
+         {user?.role === "ADMIN" && (
+  <Chip
+    label="Quản trị viên"
+    size="small"
+    color="secondary"
+    variant="filled"
+    sx={{
+      mr: 2,
+      display: { xs: "none", sm: "flex" },
+      fontWeight: 500,
+    }}
+  />
+)}
+
 
           {/* User Avatar */}
           <Tooltip title="Tài khoản">

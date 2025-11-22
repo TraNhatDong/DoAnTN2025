@@ -37,51 +37,15 @@ import { meetingService } from "../../services/meetingService";
 import { userService } from "../../services/userService";
 import { roomService } from "../../services/roomService";
 import { useAuth } from "../../context/AuthContext";
+import type { PaginationParams , Room ,MeetingRequest,ParticipantRequest} from "../../types";
 
-// Sử dụng interface PaginationParams từ API
-interface PaginationParams {
-  userId: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  phoneNumber: string;
-  birthday: string;
-  idCard: string;
-  accountUsername: string;
-  accountStatus: "ACTIVE" | "INACTIVE";
-  userStatus: "ACTIVE" | "INACTIVE";
-  accountId: number;
-  role: "USER" | "ADMIN" | "CT" | "TK"; 
-}
 
-export interface Room {
-  roomId: number;
-  roomName: string;
-  capacity: number;
-  floor: number;
-  status: "AVAI" | "INAVAI";
-}
-
-interface ParticipantRequest {
-  userId: number;
-  role: "CT" | "TK" | "TV";
-}
-
-interface UpdateMeetingRequest {
-  name: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  roomId: number;
-  participants: ParticipantRequest[];
-}
 
 interface EditMeetingDialogProps {
   open: boolean;
   onClose: () => void;
   onUpdated: () => void;
-  meeting: any; // Meeting data to edit
+  meeting: any; 
 }
 
 interface FormErrors {
@@ -202,7 +166,7 @@ export const EditMeetingDialog: React.FC<EditMeetingDialogProps> = ({
       if (currentRoomId && !availableRooms.some((room: Room) => room.roomId === currentRoomId)) {
         // Fetch thông tin phòng hiện tại để thêm vào danh sách
         try {
-          const currentRoom = await roomService.getRoom(String(currentRoomId));
+          const currentRoom = await roomService.getRoom(currentRoomId);
           availableRooms.unshift(currentRoom.data);
         } catch (err) {
           console.error("Không thể lấy thông tin phòng hiện tại:", err);
@@ -324,7 +288,7 @@ export const EditMeetingDialog: React.FC<EditMeetingDialogProps> = ({
   };
 
   // Chuẩn bị data để gửi API
-  const prepareMeetingData = (): UpdateMeetingRequest => {
+  const prepareMeetingData = (): MeetingRequest => {
     const participants: ParticipantRequest[] = [];
 
     if (formData.chuTri) {
