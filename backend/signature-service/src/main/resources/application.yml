@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: signature-service
+
+  datasource:
+    url: jdbc:mysql://mysql:3306/meetingdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+minio:
+  endpoint: http://minio:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: meeting-pdf
+
+signature:
+  gpgHome: /gnupg
+  gpgUser: tranhatdong1808@gmail.com
+  armored: true
+notification:
+  exchange: ${NOTIFICATION_EXCHANGE:notification.exchange}
+  routingKey: ${NOTIFICATION_ROUTINGKEY:notification.key}
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: signature-service
+server:
+  port: 8080
+  address: 0.0.0.0 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+

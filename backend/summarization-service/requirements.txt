@@ -1,0 +1,10 @@
+transformers==4.43.3
+sentencepiece
+accelerate
+fastapi
+uvicorn
+pika
+sqlalchemy
+pymysql
+cryptography==41.0.7
+py-eureka-client

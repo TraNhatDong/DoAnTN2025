@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      routes:
+        - id: signature-service
+          uri: lb://SIGNATURE-SERVICE
+          predicates:
+            - Path=/api/sign/**
+        - id: audio-service
+          uri: lb://AUDIO-SERVICE
+          predicates:
+            - Path=/audio/**
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+        - id: meeting-service
+          uri: lb://MEETING-SERVICE
+          predicates:
+            - Path=/meetings/**
+        - id: summary-service
+          uri: lb://SUMMARY-SERVICE
+          predicates:
+            - Path=/summaries/**
+        - id: room-service
+          uri: lb://ROOM-SERVICE
+          predicates:
+            - Path=/rooms/**
+
+server:
+  port: 8080 
+  address: 0.0.0.0                   
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: TRACE
+    reactor.netty.http.client: DEBUG
