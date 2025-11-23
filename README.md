@@ -19,7 +19,7 @@ Hệ thống quản lý và tóm tắt cuộc họp offline theo kiến trúc **
 Hệ thống được chia thành các microservice sau:
 
 * **User Service**
-  Quản lý tài khoản, phân quyền (chủ trì, thư ký, thành viên).
+  Quản lý tài khoản, phân quyền (user[chủ trì, thư ký, thành viên], admin).
 
 * **Meeting Service**
   CRUD cuộc họp, tìm kiếm cuộc họp, quản lý lịch và phòng họp.
@@ -31,7 +31,7 @@ Hệ thống được chia thành các microservice sau:
   Nhận file audio, xử lý Speech-to-Text (Whisper), lưu transcript.
 
 * **Summarization Service**
-  Tóm tắt transcript, sinh biên bản ngắn gọn (sử dụng viT5 hoặc mô hình phù hợp cho tiếng Việt).
+  Tóm tắt transcript, sinh biên bản ngắn gọn (sử dụng viT5 ).
 
 * **Signature Service**
   Ký số biên bản bằng **GnuPG** để đảm bảo tính toàn vẹn và tính pháp lý.
@@ -52,7 +52,41 @@ Hệ thống được chia thành các microservice sau:
 
 ## Công nghệ sử dụng
 
-* Backend: **Spring Boot**, Spring Cloud (Eureka, Gateway), RESTful API
+* Backend: **Spring Boot**, Spring Cloud (Eureka, Gateway), RESTful API,FastApier Service**
+  Quản lý tài khoản, phân quyền (user[chủ trì, thư ký, thành viên], admin).
+
+* **Meeting Service**
+  CRUD cuộc họp, tìm kiếm cuộc họp, quản lý lịch và phòng họp.
+
+* **Room Service**
+  Quản lý trạng thái phòng (còn trống, đang sử dụng).
+
+* **Audio / Transcript Service**
+  Nhận file audio, xử lý Speech-to-Text (Whisper), lưu transcript.
+
+* **Summarization Service**
+  Tóm tắt transcript, sinh biên bản ngắn gọn (sử dụng viT5 ).
+
+* **Signature Service**
+  Ký số biên bản bằng **GnuPG** để đảm bảo tính toàn vẹn và tính pháp lý.
+
+* **Notification Service**
+  Gửi email thông báo & chia sẻ biên bản (PDF) tới người tham dự.
+
+* **API Gateway** (Spring Cloud Gateway)
+  Tập trung endpoint, điều phối request tới các microservice.
+
+* **Service Discovery** (Eureka)
+  Tự động phát hiện service trong môi trường microservices.
+
+* **Message Broker** (RabbitMQ )
+  Dùng cho giao tiếp bất đồng bộ giữa các service (ví dụ: audio upload → publish event → transcript service xử lý).
+
+---
+
+## Công nghệ sử dụng
+
+* Backend: **Spring Boot**, Spring Cloud (Eureka, Gateway), RESTful API,FastAPI
 * Message Broker: **RabbitMQ** 
 * Database: **MySQL** 
 * Frontend: **React** (+ MUI)
@@ -72,9 +106,13 @@ Hệ thống được chia thành các microservice sau:
   * Đặt lịch họp, mời tham dự, chọn phòng.
   * Upload file audio sau họp để chuyển thành transcript và tóm tắt.
   * Duyệt & phát hành biên bản (PDF), ký số và gửi email cho người tham dự.
+* Chủ trì:
+
+  * Xác nhận tổ chức cuộc họp.
+  * Xem transcript chi tiết và bản tóm tắt; xác nhận/đồng ý biên bản.
 
 * Thành viên:
-
+  
   * Xem lịch họp, nhận thông báo.
   * Xem transcript chi tiết và bản tóm tắt; xác nhận/đồng ý biên bản.
 
@@ -86,8 +124,8 @@ Monorepo (khuyến nghị):
 
 ```
 DoAnTN2025/
-  ├── frontend/        # React app (trước đây là my-app)
-  ├── backend/         # chứa các microservice hoặc mono-backend nếu chưa tách
+  ├── my-app/       
+  ├── backend/         
   │    ├── user-service/
   │    ├── meeting-service/
   │    ├── room-service/
@@ -137,7 +175,7 @@ DoAnTN2025/
 4. **Chạy frontend**
 
    ```bash
-   cd frontend
+   cd my-app
    npm install
    npm run dev   # or npm start
    ```
