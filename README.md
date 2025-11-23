@@ -1,135 +1,145 @@
 # Meeting Management System (DoAnTN2025)
 
-**Tóm tắt:**
-Hệ thống quản lý và tóm tắt cuộc họp offline theo kiến trúc **Microservices**, sử dụng **AI / NLP** để tạo biên bản tự động. Hệ thống hỗ trợ lập lịch họp, quản lý phòng, xử lý audio → chuyển thành văn bản (Speech-to-Text), tóm tắt (NLP), và ký số biên bản (GnuPG).
+**Hệ thống quản lý và tóm tắt cuộc họp offline** theo kiến trúc **Microservices**, ứng dụng **AI/NLP** để tự động tạo biên bản từ file ghi âm. Hệ thống hỗ trợ lập lịch họp, quản lý phòng họp, xử lý âm thanh → chuyển thành văn bản (Speech-to-Text), tách người nói (Speaker Diarization), tóm tắt nội dung và ký số biên bản (GnuPG).
 
 ---
 
-## Mục tiêu dự án
+##  Mục tiêu dự án
 
-* Xây dựng hệ thống quản lý cuộc họp: lịch họp, phòng họp, người tham dự, biên bản.
-* Áp dụng **Microservices** để tách rời các chức năng theo service.
-* Ứng dụng **Speech-to-Text**, **Speaker Diarization** và **NLP Summarization** để tự động tạo biên bản tiếng Việt từ file audio.
-* Đảm bảo tính toàn vẹn và giá trị pháp lý của biên bản bằng **ký số GnuPG**.
-
----
-
-## Kiến trúc & thành phần chính
-
-Hệ thống được chia thành các microservice sau:
-
-* **User Service**
-  Quản lý tài khoản, phân quyền (user[chủ trì, thư ký, thành viên], admin).
-
-* **Meeting Service**
-  CRUD cuộc họp, tìm kiếm cuộc họp, quản lý lịch và phòng họp.
-
-* **Room Service**
-  Quản lý trạng thái phòng (còn trống, đang sử dụng).
-
-* **Audio / Transcript Service**
-  Nhận file audio, xử lý Speech-to-Text (Whisper), lưu transcript.
-
-* **Summarization Service**
-  Tóm tắt transcript, sinh biên bản ngắn gọn (sử dụng viT5 ).
-
-* **Signature Service**
-  Ký số biên bản bằng **GnuPG** để đảm bảo tính toàn vẹn và tính pháp lý.
-
-* **Notification Service**
-  Gửi email thông báo & chia sẻ biên bản (PDF) tới người tham dự.
-
-* **API Gateway** (Spring Cloud Gateway)
-  Tập trung endpoint, điều phối request tới các microservice.
-
-* **Service Discovery** (Eureka)
-  Tự động phát hiện service trong môi trường microservices.
-
-* **Message Broker** (RabbitMQ )
-  Dùng cho giao tiếp bất đồng bộ giữa các service (ví dụ: audio upload → publish event → transcript service xử lý).
+* Xây dựng hệ thống quản lý lịch họp, phòng họp, người tham dự và biên bản.
+* Ứng dụng kiến trúc **Microservices** để đảm bảo khả năng mở rộng, dễ bảo trì.
+* Tự động xử lý audio để tạo transcript và bản tóm tắt tiếng Việt bằng AI.
+* Đảm bảo tính toàn vẹn và tính pháp lý của biên bản bằng **chữ ký số GnuPG**.
 
 ---
 
-## Công nghệ sử dụng
+##  Kiến trúc hệ thống
 
-* Backend: **Spring Boot**, Spring Cloud (Eureka, Gateway), RESTful API,FastApier Service**
-  Quản lý tài khoản, phân quyền (user[chủ trì, thư ký, thành viên], admin).
+Hệ thống gồm các Microservice độc lập:
 
-* **Meeting Service**
-  CRUD cuộc họp, tìm kiếm cuộc họp, quản lý lịch và phòng họp.
+### **1. User Service**
 
-* **Room Service**
-  Quản lý trạng thái phòng (còn trống, đang sử dụng).
+* Quản lý tài khoản, vai trò (Admin, Chủ trì, Thư ký, Thành viên).
+* Xác thực & phân quyền.
 
-* **Audio / Transcript Service**
-  Nhận file audio, xử lý Speech-to-Text (Whisper), lưu transcript.
+### **2. Meeting Service**
 
-* **Summarization Service**
-  Tóm tắt transcript, sinh biên bản ngắn gọn (sử dụng viT5 ).
+* CRUD cuộc họp, mời tham dự, kiểm tra phòng trống.
+* Quản lý trạng thái cuộc họp.
 
-* **Signature Service**
-  Ký số biên bản bằng **GnuPG** để đảm bảo tính toàn vẹn và tính pháp lý.
+### **3. Room Service**
 
-* **Notification Service**
-  Gửi email thông báo & chia sẻ biên bản (PDF) tới người tham dự.
+* Quản lý phòng họp (trống / đã đặt / đang họp).
 
-* **API Gateway** (Spring Cloud Gateway)
-  Tập trung endpoint, điều phối request tới các microservice.
+### **4. Audio Service**
 
-* **Service Discovery** (Eureka)
-  Tự động phát hiện service trong môi trường microservices.
+* Nhận file audio từ người dùng.
+* Gửi sự kiện để Trigger xử lý STT.
 
-* **Message Broker** (RabbitMQ )
-  Dùng cho giao tiếp bất đồng bộ giữa các service (ví dụ: audio upload → publish event → transcript service xử lý).
+### **5. Transcript Service**
 
----
+* Chuyển audio → text bằng **Whisper**.
+* Tạo metadata timestamp, speaker.
 
-## Công nghệ sử dụng
+### **6. Summarization Service**
 
-* Backend: **Spring Boot**, Spring Cloud (Eureka, Gateway), RESTful API,FastAPI
-* Message Broker: **RabbitMQ** 
-* Database: **MySQL** 
-* Frontend: **React** (+ MUI)
-* Containerization: **Docker** (và Docker Compose để chạy local multi-container)
-* Speech-to-Text: **Whisper**
-* Speaker Diarization: **pyannote.audio**
-* NLP Summarization: **viT5** 
-* Digital Signature: **GnuPG**
-* Optional: MinIO (object storage)
+* Tóm tắt transcript bằng mô hình **viT5**.
+* Sinh bản tóm tắt ngắn gọn, rõ ý.
 
----
+### **7. Signature Service**
 
-## Tính năng (người dùng — thư ký / thành viên)
+* Ký số biên bản bằng **GnuPG** (detached signature hoặc embed PDF).
+* Lưu trữ & verify signature.
 
-* Thư ký:
+### **8. Notification Service**
 
-  * Đặt lịch họp, mời tham dự, chọn phòng.
-  * Upload file audio sau họp để chuyển thành transcript và tóm tắt.
-  * Duyệt & phát hành biên bản (PDF), ký số và gửi email cho người tham dự.
-* Chủ trì:
+* Gửi email thông báo: mời họp, biên bản, file PDF đã ký.
 
-  * Xác nhận tổ chức cuộc họp.
-  * Xem transcript chi tiết và bản tóm tắt; xác nhận/đồng ý biên bản.
+### **9. API Gateway (Spring Cloud Gateway)**
 
-* Thành viên:
-  
-  * Xem lịch họp, nhận thông báo.
-  * Xem transcript chi tiết và bản tóm tắt; xác nhận/đồng ý biên bản.
+* Điểm vào duy nhất của toàn hệ thống.
+* Routing + load balancing.
+
+### **10. Eureka Service Discovery**
+
+* Tự động phát hiện và đăng ký dịch vụ.
+
+### **11. RabbitMQ**
+
+* Event-driven workflow:
+
+  ```
+  audio_uploaded → transcript_created → summary_created → signature_ready
+  ```
 
 ---
 
-## Hướng dẫn cấu trúc repository (gợi ý)
+##  Công nghệ sử dụng
 
-Monorepo (khuyến nghị):
+### **Backend**
+
+* Spring Boot, Spring Cloud (Gateway, Eureka)
+* FastAPI cho Audio/AI microservices
+* RESTful API
+
+### **Frontend**
+
+* React + MUI
+
+### **AI / NLP**
+
+* Whisper: Speech-to-Text
+* pyannote.audio: Speaker Diarization
+* viT5: Summarization
+* Punctuation Restoration (optional)
+
+### **Hạ tầng**
+
+* MySQL
+* RabbitMQ
+* Docker & Docker Compose
+* MinIO (optional – lưu file audio/transcript/PDF)
+
+### **Bảo mật & chữ ký số**
+
+* GnuPG
+
+---
+
+##  Tính năng theo vai trò
+
+### **Thư ký**
+
+* Lập lịch họp, đặt phòng.
+* Upload file ghi âm sau cuộc họp.
+* Duyệt, chỉnh sửa và phát hành biên bản.
+* Ký số PDF → gửi cho người tham dự.
+
+### **Chủ trì**
+
+* Xác nhận tổ chức cuộc họp.
+* Xem transcript/tóm tắt.
+* Duyệt biên bản cuối cùng.
+
+### **Thành viên**
+
+* Nhận thông báo mời họp.
+* Xem lịch.
+* Xem transcript & bản tóm tắt.
+
+---
+
+##  Kiến trúc thư mục (gợi ý)
 
 ```
 DoAnTN2025/
-  ├── my-app/       
-  ├── backend/         
+  ├── my-app/               # Frontend React
+  ├── backend/
   │    ├── user-service/
   │    ├── meeting-service/
   │    ├── room-service/
   │    ├── audio-service/
+  │    ├── transcript-service/
   │    ├── summarization-service/
   │    ├── signature-service/
   │    └── notification-service/
@@ -139,68 +149,79 @@ DoAnTN2025/
 
 ---
 
-## Hướng dẫn chạy (mô tả ngắn)
+##  Hướng dẫn chạy hệ thống
 
-> **Lưu ý:** Các lệnh dưới là mẫu — điều chỉnh theo cấu hình project của bạn.
+### **1. Chuẩn bị môi trường**
 
-1. **Chuẩn bị environment**
+* Docker + Docker Compose
+* Java 17+, Maven/Gradle
+* Node.js
+* Python 3.10+ (cho audio + AI services)
 
-   * Cài đặt Docker & Docker Compose (đề xuất cho local multi-service).
-   * Cài đặt Java 17+, Maven/Gradle cho backend.
-   * Cài Node.js cho frontend.
+### **2. Chạy MySQL & RabbitMQ**
 
-2. **Chạy database & message broker**
+```bash
+docker-compose up -d mysql rabbitmq
+```
 
-   * Dùng docker-compose để khởi chạy MySQL + RabbitMQ/Kafka:
+### **3. Chạy các microservice backend**
 
-     ```bash
-     docker-compose up -d mysql rabbitmq
-     ```
+```bash
+cd backend/meeting-service
+./mvnw spring-boot:run
+```
 
-3. **Chạy từng microservice (backend)**
+Hoặc chạy bằng Docker:
 
-   * Vào folder service, build & chạy:
+```bash
+docker build -t doantn/meeting-service .
+docker run --env-file .env doantn/meeting-service
+```
 
-     ```bash
-     cd backend/meeting-service
-     ./mvnw spring-boot:run
-     ```
-   * Hoặc dùng Docker image cho mỗi service:
+### **4. Chạy dịch vụ AI (FastAPI)**
 
-     ```bash
-     docker build -t doantn/meeting-service .
-     docker run --env-file .env doantn/meeting-service
-     ```
+```bash
+uvicorn app.main:app --reload --port 8002
+```
 
-4. **Chạy frontend**
+### **5. Chạy frontend**
 
-   ```bash
-   cd my-app
-   npm install
-   npm run dev   # or npm start
-   ```
-
-5. **Pipeline xử lý audio → transcript → summary**
-
-   * Người dùng upload audio → audio-service lưu file (MinIO / storage) → publish event → transcript service xử lý STT → lưu transcript → publish event → summarization service tóm tắt → lưu biên bản → signature service ký khi thư ký duyệt → notification service gửi email.
+```bash
+cd my-app
+npm install
+npm run dev
+```
 
 ---
 
-## Cấu hình AI / NLP (ghi chú)
+##  Pipeline xử lý Audio → Transcript → Summary → Signature
 
-* **Speech-to-Text**: thử nghiệm Whisper để accuracy, Vosk cho offline nhẹ, Google STT cho production nếu cần độ chính xác cao.
-* **Speaker Diarization**: pyannote.audio (cần GPU nếu xử lý chất lượng cao).
-* **Summarization**: dùng BART / T5; với tiếng Việt nên thử viT5 hoặc fine-tune/adapter để có kết quả tốt hơn.
-* Xem xét pipeline tiền xử lý tiếng Việt (normalize, remove filler words, punctuation restoration).
+1. **Upload audio**
+2. Audio Service lưu file, publish sự kiện `audio_uploaded`
+3. Transcript Service xử lý Whisper → transcript
+4. Publish `transcript_created`
+5. Summarization Service tóm tắt bằng viT5 → tạo biên bản
+6. Publish `summary_created`
+7. Signature Service ký số bằng GnuPG
+8. Notification gửi email + PDF
 
 ---
 
-## Ký số & bảo mật
+##  Ký số & bảo mật
 
-* Sử dụng **GnuPG** để ký file PDF biên bản (detached signature hoặc embed vào PDF).
-* Lưu private key an toàn (ví dụ: vault / secure storage).
-* Cân nhắc HTTPS cho API Gateway và xác thực (JWT/OAuth2).
+* Ký số PDF bằng **GnuPG** (RSA 4096 recommended).
+* Lưu private key trong Vault / encrypted volume.
+* Hỗ trợ verify signature khi tải xuống.
+* JWT cho Authentication.
+* HTTPS tại API Gateway.
 
+---
 
+##  License
 
-* Chọn license phù hợp (MIT / Apache-2.0) và thêm file `LICENSE`.
+Bạn có thể chọn:
+
+* MIT (tự do thương mại, mở)
+* Apache 2.0 (thêm bảo vệ bằng sáng chế)
+
+---
